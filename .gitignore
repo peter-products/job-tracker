@@ -1,0 +1,11 @@
+node_modules/
+dist/
+data/
+*.csv
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.local
+.DS_Store
+AGENT-CONTEXT.md
