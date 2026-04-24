@@ -38,7 +38,7 @@ Most job tracking tools are either glorified spreadsheets or bloated CRMs design
 | **Public ATS APIs only** | Greenhouse, Lever, and Ashby all expose unauthenticated job board APIs. No scraping, no rate limit games, no terms-of-service grey areas. |
 | **Title filter, not LLM filter** | A regex on titles gets ~95% of the value. Running every job description through an LLM at fetch time would be slow and expensive. Better to fetch fast, then enrich downstream. |
 | **Description fetching is lazy** | Only happens for net-new postings, never for re-runs. Saves ~99% of API calls on a typical day. |
-| **Designed for downstream LLM processing** | The refresh script just collects raw data. A separate local LLM (Qwen 3 8B via Ollama) handles keyword extraction, summarization, and fit scoring — keeps cloud LLM token costs at zero. |
+| **Designed for downstream LLM processing** | The refresh script just collects raw data. A separate local LLM (Gemma 4 E2B via Ollama, with grammar-constrained JSON output) handles keyword extraction, technology identification, and seniority classification — keeps cloud LLM token costs at zero. |
 
 ## Tech stack
 
@@ -57,6 +57,8 @@ job-tracker/
 ├── client/               # React + Vite + Tailwind frontend
 │   └── src/App.jsx       # Main UI: table, filters, modal
 ├── refresh.js            # On-demand ATS poller + dedup + description fetch
+├── extract_keywords.py   # Local LLM extractor — schema-constrained JSON, 3 sub-calls per job
+├── ab_test.js            # A/B test runner that validated the model + approach
 ├── enrich_csv.js         # One-time backfill for hand-curated job CSVs
 └── data/                 # (gitignored) personal job data lives here
 ```
@@ -75,8 +77,15 @@ node server/index.js
 
 # run a refresh (on demand)
 node refresh.js
+
+# extract keywords from net-new postings (requires Ollama + gemma4:e2b)
+python extract_keywords.py
 ```
 
 ## Personal data note
 
 This repo intentionally excludes the `data/` directory (`.gitignore`'d). All job applications, salary research, contact notes, and the `jobs.json` database stay local. The repo demonstrates the architecture and code, not anyone's actual job search.
+
+---
+
+_Also by me: [pads.tax](https://pads.tax) · [schemafinder.com](https://schemafinder.com)_
